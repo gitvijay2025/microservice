@@ -1,0 +1,101 @@
+version: '3.8'
+
+services:
+  # ─── Infrastructure ────────────────────────────────────
+  mongodb:
+    image: mongo:7
+    container_name: micro-mongodb
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - micro-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: micro-redis
+    ports:
+      - '6379:6379'
+    networks:
+      - micro-network
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── Services ──────────────────────────────────────────
+  gateway:
+    build: ./services/gateway
+    container_name: micro-gateway
+    ports:
+      - '3000:3000'
+    env_file: .env
+    environment:
+      - USER_SERVICE_URL=http://user-service:3001
+      - PRODUCT_SERVICE_URL=http://product-service:3002
+      - ORDER_SERVICE_URL=http://order-service:3003
+    depends_on:
+      - user-service
+      - product-service
+      - order-service
+    networks:
+      - micro-network
+
+  user-service:
+    build: ./services/user-service
+    container_name: micro-user-service
+    ports:
+      - '3001:3001'
+    env_file: .env
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - micro-network
+
+  product-service:
+    build: ./services/product-service
+    container_name: micro-product-service
+    ports:
+      - '3002:3002'
+    env_file: .env
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - micro-network
+
+  order-service:
+    build: ./services/order-service
+    container_name: micro-order-service
+    ports:
+      - '3003:3003'
+    env_file: .env
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017
+      - PRODUCT_SERVICE_URL=http://product-service:3002
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      product-service:
+        condition: service_started
+    networks:
+      - micro-network
+
+volumes:
+  mongo-data:
+
+networks:
+  micro-network:
+    driver: bridge
