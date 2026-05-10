@@ -41,6 +41,11 @@ jobs:
         run: |
           cd services/$SERVICE_NAME
           npm test || echo "No tests found"
+          
+      - name: Debug Secret Presence
+        run: |
+          if [ -z "${{ secrets.AWS_ACCESS_KEY_ID }}" ]; then echo "Access Key is EMPTY"; else echo "Access Key is FOUND"; fi
+          if [ -z "${{ secrets.AWS_SECRET_ACCESS_KEY }}" ]; then echo "Secret Key is EMPTY"; else echo "Secret Key is FOUND"; fi
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
