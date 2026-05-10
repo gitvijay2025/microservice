@@ -28,7 +28,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           cache: 'npm'
           cache-dependency-path: services/${{ github.event.inputs.service }}/package-lock.json
 
@@ -41,7 +41,7 @@ jobs:
         run: |
           cd services/$SERVICE_NAME
           npm test || echo "No tests found"
-          
+
       - name: Debug Secret Presence
         run: |
           if [ -z "${{ secrets.AWS_ACCESS_KEY_ID }}" ]; then echo "Access Key is EMPTY"; else echo "Access Key is FOUND"; fi
@@ -50,8 +50,8 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-access-key-id: AKIA6QLSBW4X4PN55S4E
+          aws-secret-access-key: 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
           aws-region: ap-south-1
 
       - name: Login to Amazon ECR
