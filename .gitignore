@@ -1,7 +1,4 @@
-services/gateway/node_modules/
-services/order-service/node_modules/
-services/product-service/node_modules/
-services/user-service/node_modules/
+node_modules/
 .env
 dist/
 coverage/
