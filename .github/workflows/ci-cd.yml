@@ -16,7 +16,7 @@ on:
           - order-service
 
 jobs:
-  test-and-build:
+  build-and-push-microservice:
     runs-on: ubuntu-latest
     env:
       SERVICE_NAME: ${{ github.event.inputs.service }}
@@ -36,6 +36,7 @@ jobs:
         run: |
           cd services/$SERVICE_NAME
           npm install
+          npm audit fix --force
 
       - name: Run Tests
         run: |
