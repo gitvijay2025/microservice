@@ -5,21 +5,35 @@ on:
   workflow_dispatch:
     inputs:
       service:
-        description: 'Select the service to build and push'
+        description: 'Select the service to deploy'
         required: true
-        default: 'Deployment'
+        default: 'all'
         type: choice
         options:
-          - Execute deployment
-         
+          - all
+          - gateway
+          - user-service
+          - product-service
+          - order-service
 
 jobs:
-  build-and-push-microservice:
+  deploy:
     runs-on: ubuntu-latest
-    env:
-      SERVICE_NAME: ${{ github.event.inputs.service }}
     
     steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
               
       # Update Kubeconfig
       - name: Update kubeconfig
@@ -29,15 +43,19 @@ jobs:
       - name: Deploy to EKS
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: micro-${{ github.event.inputs.service }}
+          SERVICE_NAME: ${{ github.event.inputs.service }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
           # Apply base configs
           kubectl apply -f infra/k8s/base-config.yaml
           kubectl apply -f infra/k8s/mongodb.yaml
-          kubectl apply -f infra/k8s/gateway.yaml
-          kubectl apply -f infra/k8s/order-service.yaml
-          kubectl apply -f infra/k8s/product-service.yaml
-          kubectl apply -f infra/k8s/user-service.yaml          
           
+          if [ "$SERVICE_NAME" == "all" ]; then
+            kubectl apply -f infra/k8s/gateway.yaml
+            kubectl apply -f infra/k8s/order-service.yaml
+            kubectl apply -f infra/k8s/product-service.yaml
+            kubectl apply -f infra/k8s/user-service.yaml
+          else
+            kubectl apply -f infra/k8s/$SERVICE_NAME.yaml
+          fi
 
