@@ -1,11 +1,148 @@
+## install aws configure 
+
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+unzip awscliv2.zip
+sudo ./aws/install
+
+aws --version
+
+aws sts get-caller-identity
+
+{
+  "UserId": "AIDA...",
+  "Account": "123456789",
+  "Arn": "arn:aws:iam::123456789:user/vijay"
+}
+
+aws configure list
+
+aws s3 ls
+Example: List S3 Buckets
+aws s3 ls
+
+Example: List EC2 Instances
+aws ec2 describe-instances
+
+Example: List Lambda Functions
+aws lambda list-functions
+
+Install eksctl on Ubuntu/Linux
+
+
+curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+
+sudo mv /tmp/eksctl /usr/local/bin
+
+Verify Installation
+eksctl version
+
+
+Also Install kubectl
+
+
+Install:
+
+curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+chmod +x kubectl
+sudo mv kubectl /usr/local/bin/
+
+Verify:
+
+kubectl version --client
+
+
+
+ADD IAM user permission
+
+Then:
+
+Open Users
+
+Select:
+
+github-actions-bot
+
+Click:
+
+Add permissions
+Attach policies directly
+aws iam list-attached-user-policies --user-name github-actions-bot
+{
+    "AttachedPolicies": [
+        {
+            "PolicyName": "AmazonEC2ContainerRegistryPowerUser",
+            "PolicyArn": "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser"
+        },
+        {
+            "PolicyName": "AmazonEC2FullAccess",
+            "PolicyArn": "arn:aws:iam::aws:policy/AmazonEC2FullAccess"
+        },
+        {
+            "PolicyName": "IAMFullAccess",
+            "PolicyArn": "arn:aws:iam::aws:policy/IAMFullAccess"
+        },
+        {
+            "PolicyName": "AmazonEKSClusterPolicy",
+            "PolicyArn": "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
+        },
+        {
+            "PolicyName": "AmazonVPCFullAccess",
+            "PolicyArn": "arn:aws:iam::aws:policy/AmazonVPCFullAccess"
+        },
+        {
+            "PolicyName": "AmazonEKSWorkerNodePolicy",
+            "PolicyArn": "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
+        }
+    ]
+}
+
+aws iam attach-user-policy \
+  --user-name github-actions-bot \
+  --policy-arn arn:aws:iam::aws:policy/AdministratorAccess
+
+
+
+
 eksctl create cluster \
   --name action-eks-cluster \
   --region ap-south-1 \
   --version 1.33 \
   --nodes 1 \
-  --nodegroup-name actions-eks-ng \
-  --node-type t3.medium \
+  --nodegroup-name actionss-eks-ng \
+  --node-type t3.small \
   --nodes-min 1 \
   --nodes-max 2 \
   --managed
 
+
+
+
+
+
+
+eksctl delete cluster \
+  --name action-eks-cluster \
+  --region ap-south-1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Javascript,Full Stack,React.Js,Node js, Nest JS, Next Js Microservice, Information Technology, Java Developer, Python
+
+
+LLM integration, RAG, Prompt engineering, Eval Process, Agentic architecture , understanding of at least one framework - Langgraph preferably, Agentic System Tracing.
