@@ -1,0 +1,43 @@
+name: Manual Microservice Build
+
+on:
+  # This allows you to trigger the build manually from the GitHub UI
+  workflow_dispatch:
+    inputs:
+      service:
+        description: 'Select the service to build and push'
+        required: true
+        default: 'Deployment'
+        type: choice
+        options:
+          - Execute deployment
+         
+
+jobs:
+  build-and-push-microservice:
+    runs-on: ubuntu-latest
+    env:
+      SERVICE_NAME: ${{ github.event.inputs.service }}
+    
+    steps:
+              
+      # Update Kubeconfig
+      - name: Update kubeconfig
+        run: aws eks --region ${{ secrets.AWS_REGION }} update-kubeconfig --name action-eks-cluster
+
+      # Deploy to Amazon EKS
+      - name: Deploy to EKS
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: micro-${{ github.event.inputs.service }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          # Apply base configs
+          kubectl apply -f infra/k8s/base-config.yaml
+          kubectl apply -f infra/k8s/mongodb.yaml
+          kubectl apply -f infra/k8s/gateway.yaml
+          kubectl apply -f infra/k8s/order-service.yaml
+          kubectl apply -f infra/k8s/product-service.yaml
+          kubectl apply -f infra/k8s/user-service.yaml          
+          
+
