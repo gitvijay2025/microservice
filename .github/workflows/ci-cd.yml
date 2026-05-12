@@ -81,4 +81,33 @@ jobs:
         run: |
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+         
+      # Update Kubeconfig
+      - name: Update kubeconfig
+        run: aws eks --region ${{ secrets.AWS_REGION }} update-kubeconfig --name action-eks-cluster
+
+      # Deploy to Amazon EKS
+      - name: Deploy to EKS
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: micro-${{ github.event.inputs.service }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          # Apply base configs
+          kubectl apply -f infra/k8s/base-config.yaml
+          kubectl apply -f infra/k8s/mongodb.yaml
+          kubectl apply -f infra/k8s/gateway.yaml
+          kubectl apply -f infra/k8s/order-service.yaml
+          kubectl apply -f infra/k8s/product-service.yaml
+          kubectl apply -f infra/k8s/user-service.yaml
+          
+          # Apply the service manifest
+          #kubectl apply -f infra/k8s/$SERVICE_NAME.yaml
+          
+          # Force the deployment to use the new image we just built
+          # Note: We use $SERVICE_NAME because the YAML name and container name match
+          #kubectl set image deployment/$SERVICE_NAME $SERVICE_NAME=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+
+          
 

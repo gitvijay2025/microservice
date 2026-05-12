@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: product-service
-          image: <AWS_ACCOUNT_ID>.dkr.ecr.<AWS_REGION>.amazonaws.com/micro-product-service:latest
+          image: 997208471343.dkr.ecr.ap-south-1.amazonaws.com/micro-product-service:latest
           ports:
             - containerPort: 3002
           envFrom:

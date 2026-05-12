@@ -1,0 +1,11 @@
+eksctl create cluster \
+  --name action-eks-cluster \
+  --region ap-south-1 \
+  --version 1.33 \
+  --nodes 1 \
+  --nodegroup-name actions-eks-ng \
+  --node-type t3.medium \
+  --nodes-min 1 \
+  --nodes-max 2 \
+  --managed
+

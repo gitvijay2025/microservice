@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: order-service
-          image: <AWS_ACCOUNT_ID>.dkr.ecr.<AWS_REGION>.amazonaws.com/micro-order-service:latest
+          image: 997208471343.dkr.ecr.ap-south-1.amazonaws.com/micro-order-service:latest
           ports:
             - containerPort: 3003
           envFrom:

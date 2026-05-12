@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: api-gateway
+  name: gateway
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: api-gateway
+      app: gateway
   template:
     metadata:
       labels:
-        app: api-gateway
+        app: gateway
     spec:
       containers:
-        - name: api-gateway
-          image: <AWS_ACCOUNT_ID>.dkr.ecr.<AWS_REGION>.amazonaws.com/micro-gateway:latest # Update with your image
+        - name: gateway
+          image: 997208471343.dkr.ecr.ap-south-1.amazonaws.com/micro-gateway:latest # Update with your image
           ports:
             - containerPort: 3000
           envFrom:
@@ -31,11 +31,12 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: api-gateway
+  name: gateway
 spec:
   type: LoadBalancer # Expose gateway to the internet
   ports:
     - port: 80
       targetPort: 3000
   selector:
-    app: api-gateway
+    app: gateway
+
