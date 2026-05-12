@@ -1,0 +1,26 @@
+# ServiceMonitor for Miro Microservices
+# This resource tells Prometheus which services to scrape for metrics.
+
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: microservices-monitor
+  namespace: monitoring # Usually lives in the monitoring namespace
+  labels:
+    release: prometheus # Must match the release name of your prometheus installation
+spec:
+  # Selects which services to monitor
+  selector:
+    matchExpressions:
+      - {key: app, operator: In, values: [user-service, product-service, order-service, gateway]}
+  
+  # Which namespace(s) to look in for the services
+  namespaceSelector:
+    matchNames:
+      - default
+  
+  # The endpoint on your pods that provides metrics
+  endpoints:
+  - port: http # Make sure your Service port is named 'http'
+    path: /health # Or /metrics if you use a library like prom-client
+    interval: 15s

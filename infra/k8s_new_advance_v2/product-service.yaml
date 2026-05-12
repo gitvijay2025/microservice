@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: product-service
+spec:
+  # Best Practice: Start with minReplicas (matches HPA)
+  replicas: 2
+  # Best Practice: Zero-Downtime Strategy
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: product-service
+  template:
+    metadata:
+      labels:
+        app: product-service
+      # Best Practice: Pod-level Security Context
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+      containers:
+        - name: product-service
+          image: 997208471343.dkr.ecr.ap-south-1.amazonaws.com/micro-product-service:latest
+
+          # Best Practice: Container-level Security Context
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          ports:
+            - containerPort: 3002
+          
+          # Best Practice: Pre-stop Hook
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sleep", "15"]
+
+          # Best Practice: Probes
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 3002
+            failureThreshold: 30
+            periodSeconds: 10
+          
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3002
+            periodSeconds: 20
+          
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 3002
+            periodSeconds: 10
+
+          # Best Practice: Externalized Configs
+          envFrom:
+            - configMapRef:
+                name: micro-config
+            - secretRef:
+                name: micro-secrets
+          
+          # Best Practice: Resource Management
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: product-service
+spec:
+  ports:
+    - port: 3002
+      targetPort: 3002
+  selector:
+    app: product-service

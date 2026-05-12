@@ -221,3 +221,37 @@ A GitHub Actions workflow is provided in `.github/workflows/ci-cd.yml`:
 4. **Layered Architecture** — Clean separation: routes → controllers → services → models.
 5. **Graceful Shutdown** — Drains in-flight requests before process exit.
 6. **Event Bus** — Decoupled inter-module communication.
+
+
+
+
+In your current setup, you are using a Service of type: LoadBalancer for your gateway. While this works, an Ingress is often a better choice for production environments.
+
+When to use Ingress vs. LoadBalancer
+
+In your current setup, you are using a Service of type: LoadBalancer for your gateway. While this works, an Ingress is often a better choice for production environments.
+
+When to use Ingress vs. LoadBalancer
+
+Feature	Service 
+
+Cost	
+
+LoadBalancer: Expensive: Cloud providers charge you for every LoadBalancer you create.	
+Ingress: Economical: One LoadBalancer can route traffic to dozens of services.
+
+Routing	
+
+LoadBalancer: Simple port-based routing only.	
+Ingress: Advanced: Supports Path-based (/api) and Host-based (shop.com) routing.
+
+SSL/TLS	
+
+LoadBalancer: Must be handled individually or via cloud-specific annotations.	
+Ingress : Centralized: SSL certificates are managed in one place (Ingress Controller).
+
+
+Layer	
+
+LoadBalancer:  Operates at Layer 4 (TCP).	
+Ingress: Operates at Layer 7 (HTTP/HTTPS).

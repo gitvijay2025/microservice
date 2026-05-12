@@ -1,0 +1,85 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb
+spec:
+  ports:
+    - port: 27017
+  selector:
+    app: mongodb
+  clusterIP: None # Headless service for the database
+
+---
+# Best Practice: Persistent Storage for Databases
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongodb-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi # Request 10GB of permanent storage
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongodb
+spec:
+  # Best Practice: For Databases, usually 1 replica is used unless using a ReplicaSet
+  replicas: 1 
+  selector:
+    matchLabels:
+      app: mongodb
+  template:
+    metadata:
+      labels:
+        app: mongodb
+      # Best Practice: Security Context
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999 # MongoDB image default user
+        fsGroup: 999
+      containers:
+        - name: mongodb
+          image: mongo:7
+          
+          # Best Practice: Container Security
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          ports:
+            - containerPort: 27017
+          
+          # Best Practice: Liveness Probe for Database
+          livenessProbe:
+            exec:
+              command:
+                - mongo
+                - --eval
+                - "db.adminCommand('ping')"
+            initialDelaySeconds: 30
+            periodSeconds: 20
+
+          # Best Practice: Resource Management
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "256Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
+
+          volumeMounts:
+            - name: mongo-storage
+              mountPath: /data/db # MongoDB data directory
+      
+      volumes:
+        - name: mongo-storage
+          # Best Practice: Use PVC instead of emptyDir
+          persistentVolumeClaim:
+            claimName: mongodb-pvc

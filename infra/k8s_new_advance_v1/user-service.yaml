@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-service
+spec:
+  # Best Practice: High Availability - Run at least 3 replicas
+  replicas: 3
+  # Best Practice: Zero-Downtime Strategy
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1       # Create 1 new pod before killing old one
+      maxUnavailable: 0 # Ensure 100% capacity during updates
+  selector:
+    matchLabels:
+      app: user-service
+  template:
+    metadata:
+      labels:
+        app: user-service
+    spec:
+      # Best Practice: Graceful Shutdown - Allow enough time for cleanup
+      terminationGracePeriodSeconds: 60
+      containers:
+        - name: user-service
+          image: 997208471343.dkr.ecr.ap-south-1.amazonaws.com/micro-user-service:latest
+          ports:
+            - containerPort: 3001
+          
+          # Best Practice: Pre-stop Hook - Wait for Load Balancer to stop routing traffic
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sleep", "15"]
+
+          # Best Practice: Startup Probe - Handle initial application boot
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 3001
+            failureThreshold: 30 # (30 * 10s = 300s / 5 mins)
+            periodSeconds: 10
+          
+          # Best Practice: Liveness Probe - Restart container if it hangs
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3001
+            periodSeconds: 20
+            timeoutSeconds: 5
+          
+          # Best Practice: Readiness Probe - Ensure app is ready (DB connected)
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 3001
+            periodSeconds: 10
+            successThreshold: 1
+
+          # Best Practice: Externalized Configs
+          envFrom:
+            - configMapRef:
+                name: micro-config
+            - secretRef:
+                name: micro-secrets
+          
+          # Best Practice: Resource Management - Prevent "Noisy Neighbors"
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-service
+spec:
+  ports:
+    - port: 3001
+      targetPort: 3001
+  selector:
+    app: user-service

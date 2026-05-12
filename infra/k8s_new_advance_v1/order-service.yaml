@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-service
+spec:
+  # Best Practice: High Availability
+  replicas: 3
+  # Best Practice: Zero-Downtime Strategy
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: order-service
+  template:
+    metadata:
+      labels:
+        app: order-service
+    spec:
+      # Best Practice: Graceful Shutdown
+      terminationGracePeriodSeconds: 60
+      containers:
+        - name: order-service
+          image: 997208471343.dkr.ecr.ap-south-1.amazonaws.com/micro-order-service:latest
+          ports:
+            - containerPort: 3003
+          
+          # Best Practice: Pre-stop Hook
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sleep", "15"]
+
+          # Best Practice: Probes
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 3003
+            failureThreshold: 30
+            periodSeconds: 10
+          
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3003
+            periodSeconds: 20
+          
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 3003
+            periodSeconds: 10
+
+          # Best Practice: Externalized Configs
+          envFrom:
+            - configMapRef:
+                name: micro-config
+            - secretRef:
+                name: micro-secrets
+          
+          # Best Practice: Resource Management
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: order-service
+spec:
+  ports:
+    - port: 3003
+      targetPort: 3003
+  selector:
+    app: order-service
